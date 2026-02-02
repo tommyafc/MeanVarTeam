@@ -2,11 +2,9 @@
 
 set -e
 
-echo "=== Installazione pacchetti per Chromium + driver su Render/Ubuntu ==="
+echo "=== INIZIO INSTALLAZIONE CHROMIUM + DRIVER SU RENDER ==="
 
 apt-get update -y
-
-# Pacchetti essenziali + chromium + driver (usa chromium-driver su molte immagini recenti)
 apt-get install -y --no-install-recommends \
     chromium-browser \
     chromium-driver \
@@ -30,22 +28,29 @@ apt-get install -y --no-install-recommends \
     libxrandr2 \
     ca-certificates \
     wget \
-    unzip
+    unzip \
+    libstdc++6
 
-# Se "chromium-driver" non esiste, prova alternativa "chromium-chromedriver" (commenta sopra e decommenta sotto se fallisce)
-# apt-get install -y chromium-chromedriver
+# Tentativo alternativo se chromium-driver non esiste
+if ! dpkg -l | grep -q chromium-driver; then
+    echo "chromium-driver non trovato → provo chromium-chromedriver"
+    apt-get install -y chromium-chromedriver || echo "Anche chromium-chromedriver fallito"
+fi
 
 apt-get clean
 rm -rf /var/lib/apt/lists/*
 
-# Symlink per coprire i percorsi più comuni
+# Symlink aggressivi per coprire tutti i percorsi possibili
 ln -sf /usr/lib/chromium-browser/chromedriver /usr/bin/chromedriver 2>/dev/null || true
-ln -sf /usr/bin/chromium-browser /usr/bin/chrome 2>/dev/null || true
 ln -sf /usr/bin/chromedriver /usr/local/bin/chromedriver 2>/dev/null || true
+ln -sf /usr/bin/chromium-browser /usr/bin/chrome 2>/dev/null || true
 
-# Debug: mostra dove sono installati
-echo "=== DEBUG PATHS ==="
-which chromium-browser || echo "chromium-browser NON trovato"
-which chromedriver || echo "chromedriver NON trovato in PATH"
-ls -l /usr/bin/chromedriver /usr/lib/chromium-browser/chromedriver 2>/dev/null || echo "File chromedriver non esiste"
-find /usr -name chromedriver 2>/dev/null || echo "Nessun chromedriver trovato in /usr"
+# DEBUG ESTESO – COPIA QUESTE RIGHE NEI LOG BUILD
+echo "=== DEBUG INSTALLAZIONE ==="
+echo "which chromium-browser:" $(which chromium-browser || echo "NON TROVATO")
+echo "which chromedriver:" $(which chromedriver || echo "NON TROVATO")
+echo "which chrome:" $(which chrome || echo "NON TROVATO")
+ls -la /usr/bin/chromedriver /usr/lib/chromium-browser/chromedriver /usr/local/bin/chromedriver 2>/dev/null || echo "Nessun chromedriver nei percorsi classici"
+find /usr -name "*chromedriver*" -type f 2>/dev/null || echo "find: nessun chromedriver trovato in /usr"
+dpkg -l | grep -i chrome || echo "Nessun pacchetto chrome/chromium installato"
+echo "=== FINE DEBUG ==="
