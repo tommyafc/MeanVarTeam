@@ -160,6 +160,19 @@ if __name__ == "__main__":
         driver.get("https://www.sofascore.com")
         print(f"Page title: {driver.title}")
 
+possible_driver_paths = [
+    "/usr/bin/chromedriver",
+    "/usr/lib/chromium-browser/chromedriver",
+    "/usr/local/bin/chromedriver",
+    "/usr/bin/chromium-chromedriver",          # variante
+    "/usr/lib/chromium/chromedriver",          # altra
+    "/opt/chromedriver"                        # se scaricato manualmente in futuro
+]
+print("[DEBUG] Percorsi controllati per chromedriver:")
+for p in possible_driver_paths:
+    exists = os.path.exists(p)
+    print(f"  {p}: {'ESISTE' if exists else 'NON esiste'}")
+
         # In network tracking mode, you can access performance logs via:
         # logs = driver.get_log('performance')
         # to monitor all network requests made by the page
