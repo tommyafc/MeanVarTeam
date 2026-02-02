@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
 
-# ── Installa Chromium + driver + dipendenze minime ────────────────
-# Testato su Render nel 2025–2026
+set -e  # esci subito se un comando fallisce
 
-set -e  # esci se un comando fallisce
+echo "=== Installazione Chromium + chromedriver su Render ==="
 
 apt-get update -y
 apt-get install -y --no-install-recommends \
-    chromium \
-    chromium-driver \
+    chromium-browser \
+    chromium-chromedriver \
     libnss3 \
     libglib2.0-0 \
     libfontconfig1 \
@@ -28,12 +27,16 @@ apt-get install -y --no-install-recommends \
     libxfixes3 \
     libxrandr2 \
     ca-certificates \
-    wget
+    wget \
+    unzip
 
-# Pulizia per non gonfiare l'immagine
 apt-get clean
 rm -rf /var/lib/apt/lists/*
 
-echo "Chromium e chromedriver installati"
-echo "Chromium path: $(which chromium)"
-echo "Chromedriver path: $(which chromedriver)"
+# Symlink per compatibilità (molti codici cercano questi path)
+ln -sf /usr/lib/chromium-browser/chromedriver /usr/bin/chromedriver
+ln -sf /usr/bin/chromium-browser /usr/bin/chrome
+
+echo "Chromium: $(which chromium-browser)"
+echo "Chromedriver: $(which chromedriver)"
+ls -l /usr/bin/chromedriver /usr/lib/chromium-browser/chromedriver
