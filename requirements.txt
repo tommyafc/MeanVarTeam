@@ -8,3 +8,7 @@ uncurl
 fake-useragent
 soccerdata
 html5lib
+streamlit>=1.42
+pandas
+beautifulsoup4
+selenium>=4.25
