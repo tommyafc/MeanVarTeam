@@ -3,6 +3,7 @@ pandas
 beautifulsoup4
 selenium
 lxml
+webdriver-manager
 uncurl
 fake-useragent
 soccerdata
