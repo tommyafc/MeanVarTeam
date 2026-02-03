@@ -2,7 +2,18 @@ import streamlit as st
 import pandas as pd
 from whoscored.whoscored_events_data import load_whoscored_events_data
 
+import sys
+import os
 
+st.write("Current working directory:", os.getcwd())
+st.write("sys.path:", sys.path)
+
+try:
+    import whoscored
+    st.success("Cartella 'whoscored' trovata come pacchetto")
+except ImportError:
+    st.error("Cartella 'whoscored' NON riconosciuta come pacchetto → manca __init__.py?")
+    
 st.set_page_config(page_title="WhoScored Events (soccerdata)", layout="wide")
 
 st.title("WhoScored Match Events Viewer ⚽📊 [via soccerdata]")
