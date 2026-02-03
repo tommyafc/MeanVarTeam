@@ -1,2 +1,0 @@
-from .whoscored_events_data import load_whoscored_events_data
-
