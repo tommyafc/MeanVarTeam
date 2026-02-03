@@ -36,37 +36,6 @@ if st.button("Carica eventi partita", type="primary", disabled=not match_url.str
 
                 if df is not None and not df.empty:
                     st.success(f"Caricati **{len(df):,}** eventi!")
-
-                    # Statistiche veloci
-                    col1, col2 = st.columns(2)
-                    col1.metric("Eventi totali", f"{len(df):,}")
-                    if "type" in df.columns:
-                        goals = len(df[df['type'].apply(lambda x: x.get('displayName') == 'Goal' if isinstance(x, dict) else False)])
-                        col2.metric("Goal rilevati", goals)
-
-                    # Tabella principale
-                    st.subheader("Eventi partita (ordinati per tempo)")
-
-                    # Colonne utili da mostrare (adatta se vuoi)
-                    cols_show = ["minute", "second", "playerName", "type", "outcomeType", "teamId", "x", "y"]
-                    available = [c for c in cols_show if c in df.columns]
-
-                    st.dataframe(
-                        df[available].sort_values("minute"),
-                        use_container_width=True,
-                        hide_index=True
-                    )
-
-                    # Opzionale: scarica CSV
-                    csv = df.to_csv(index=False).encode('utf-8')
-                    st.download_button(
-                        "Scarica eventi come CSV",
-                        csv,
-                        "whoscored_events.csv",
-                        "text/csv",
-                        key="download-csv"
-                    )
-
                 else:
                     st.warning("Nessun evento trovato o parsing fallito.")
 
