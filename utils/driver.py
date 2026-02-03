@@ -105,47 +105,9 @@ class DriverContext:
         if self.driver:
             self.driver.quit()  # Close browser and clean up resources
 
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-import os
 
-def get_driver():
-    options = Options()
-    options.add_argument("--headless=new")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-gpu")
-    options.add_argument("--disable-software-rasterizer")
-    options.add_argument("--window-size=1920,1080")
-    options.binary_location = "/usr/bin/chromium-browser"  # o "/usr/lib/chromium-browser/chromium-browser"
-
-    # Percorsi possibili (aggiornati con i più comuni su Render)
-    possible_driver_paths = [
-        "/usr/bin/chromedriver",
-        "/usr/lib/chromium-browser/chromedriver",
-        "/usr/local/bin/chromedriver",
-        "/usr/lib/chromium/chromedriver",          # variante
-        "/usr/bin/chromium-chromedriver"           # altra variante
-    ]
-
-    chromedriver_path = None
-    for path in possible_driver_paths:
-        if os.path.isfile(path) and os.access(path, os.X_OK):
-            chromedriver_path = path
-            break
-
-    if chromedriver_path is None:
-        error_msg = f"Chromedriver NON trovato in: {possible_driver_paths}\n"
-        error_msg += "Controlla i LOG BUILD per il DEBUG INSTALLAZIONE!\n"
-        error_msg += "Suggerimento: cerca 'find: ' o 'which chromedriver:' nei log."
-        raise FileNotFoundError(error_msg)
-
-    print(f"[DEBUG] Usando chromedriver: {chromedriver_path}")  # appare nei runtime logs
-
-    service = Service(executable_path=chromedriver_path)
-    driver = webdriver.Chrome(service=service, options=options)
-    return driver
+def get_driver(track_network=False):
+    return DriverContext(track_network=track_network)
 
 
 # Example usage
@@ -159,19 +121,6 @@ if __name__ == "__main__":
     with get_driver(track_network=True) as driver:
         driver.get("https://www.sofascore.com")
         print(f"Page title: {driver.title}")
-
-possible_driver_paths = [
-    "/usr/bin/chromedriver",
-    "/usr/lib/chromium-browser/chromedriver",
-    "/usr/local/bin/chromedriver",
-    "/usr/bin/chromium-chromedriver",          # variante
-    "/usr/lib/chromium/chromedriver",          # altra
-    "/opt/chromedriver"                        # se scaricato manualmente in futuro
-]
-print("[DEBUG] Percorsi controllati per chromedriver:")
-for p in possible_driver_paths:
-    exists = os.path.exists(p)
-    print(f"  {p}: {'ESISTE' if exists else 'NON esiste'}")
 
         # In network tracking mode, you can access performance logs via:
         # logs = driver.get_log('performance')
