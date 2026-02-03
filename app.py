@@ -1,46 +1,42 @@
 import streamlit as st
-import pandas as pd
-from utils.driver import DriverContext, get_driver
-from whoscored.whoscored_events_data import load_whoscored_events_data   # il tuo scraper
+import soccerdata as sd
+import re
 
-# User agent rotation
-# Chrome options to avoid detection
-
-st.title("WhoScored Match Events Viewer ⚽📊")
-
-st.markdown("""
-Inserisci l'URL del **Match Centre** di WhoScored (live o post-match).  
-Esempio:  
-`https://www.whoscored.com/Matches/1729345/Live/England-Premier-League-2025-2026-Manchester-United-Liverpool`
-""")
-
-# ── Casella per inserire l'URL ────────────────────────────────
-match_url = st.text_input(
-    "URL Match Centre WhoScored",
-    placeholder="https://www.whoscored.com/Matches/......",
-    help="Copia l'URL dalla barra del browser quando sei nella pagina Match Centre"
-)
-
-# Bottone per avviare lo scraping
-if st.button("Carica eventi partita", type="primary", disabled=not match_url.strip()):
-    if not match_url.strip():
-        st.warning("Inserisci un URL valido.")
-    else:
-        with st.spinner("Scraping dati da WhoScored... (10–30 secondi)"):
-            try:
-                # Chiamata alla tua funzione (con cache se l'hai decorata)
-                df = load_whoscored_events_data(match_url)
-
-                if df is not None and not df.empty:
-                    st.success(f"Caricati **{len(df):,}** eventi!")
-                else:
-                    st.warning("Nessun evento trovato o parsing fallito.")
-
-            except Exception as e:
-                st.error(f"Errore durante il caricamento:\n{str(e)}")
-                st.info("Controlla che l'URL sia corretto e che la pagina sia un Match Centre valido.")
-
-else:
-    # Messaggio iniziale / placeholder
-    if not match_url.strip():
-        st.info("Inserisci l'URL e premi il bottone per iniziare.")
+@st.cache_data(ttl=3600, show_spinner="Caricamento eventi da WhoScored via soccerdata...")
+def load_whoscored_events_data(match_url: str):
+    """
+    Estrae match_id dall'URL e scarica gli eventi con soccerdata.
+    Restituisce DataFrame o None in caso di errore.
+    """
+    try:
+        # Estrai match_id dall'URL (es. /Matches/1901138/...)
+        match = re.search(r'/Matches/(\d+)', match_url)
+        if not match:
+            st.error("Impossibile estrarre match_id dall'URL. Deve contenere '/Matches/NUMERO/'")
+            return None
+        
+        match_id = int(match.group(1))
+        
+        # Inizializza WhoScored (league/season opzionali, ma aiutano per caching)
+        # Puoi lasciare leagues/seasons vuoti se vuoi solo un match
+        ws = sd.WhoScored(
+            leagues=None,          # o es. "ENG-Premier League" se conosci la lega
+            seasons=None,          # o "2526" per 2025/26
+            no_cache=False,        # usa cache se possibile
+            proxy=None,            # aggiungi proxy/Tor se bloccato
+            headless=True
+        )
+        
+        # Scarica eventi (default: pd.DataFrame)
+        events_df = ws.read_events(match_id=match_id)
+        
+        if events_df is None or events_df.empty:
+            st.warning(f"Nessun evento trovato per match_id {match_id}")
+            return None
+        
+        return events_df
+    
+    except Exception as e:
+        st.error(f"Errore durante il caricamento con soccerdata:\n{str(e)}")
+        st.info("Possibili cause: match_id non valido, partita senza eventi, limite rate WhoScored, bisogno di proxy.")
+        return None
