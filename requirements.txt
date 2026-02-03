@@ -2,10 +2,9 @@ requests
 pandas
 beautifulsoup4
 selenium
-lxml
 webdriver-manager
+lxml
 uncurl
 fake-useragent
 soccerdata
 html5lib
-streamlit
