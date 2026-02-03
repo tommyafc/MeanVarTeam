@@ -1,5 +1,15 @@
 import streamlit as st
 import pandas as pd
+from utils.driver import DriverContext, get_driver
+
+# Context manager for driver lifecycle
+with DriverContext() as driver:
+    driver.get(url)
+    # Perform scraping operations
+
+# Simple driver getter
+with get_driver() as driver:
+    driver.get(url)
 from whoscored.whoscored_events_data import load_whoscored_events_data   # il tuo scraper
 
 # User agent rotation
