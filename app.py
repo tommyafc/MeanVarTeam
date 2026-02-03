@@ -4,6 +4,9 @@ from utils.driver import DriverContext, get_driver
 from whoscored.whoscored_events_data import load_whoscored_events_data   # il tuo scraper
 
 # User agent rotation
+# Chrome options to avoid detection
+options.add_experimental_option("excludeSwitches", ["enable-automation"])
+options.add_experimental_option('useAutomationExtension', False)
 
 st.title("WhoScored Match Events Viewer ⚽📊")
 
