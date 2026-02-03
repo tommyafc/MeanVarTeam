@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
-from whoscored.whoscored_events_data import load_whoscored_events_data
-    
+from events_loader import load_whoscored_events_data   # o dal nome che hai scelto
+
 st.set_page_config(page_title="WhoScored Events (soccerdata)", layout="wide")
 
 st.title("WhoScored Match Events Viewer ⚽📊 [via soccerdata]")
