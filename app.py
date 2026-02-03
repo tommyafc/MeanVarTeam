@@ -1,33 +1,6 @@
 import streamlit as st
 import pandas as pd
 from whoscored.whoscored_events_data import load_whoscored_events_data   # il tuo scraper
-from utils.driver import DriverContext, get_driver
-
-# Context manager for driver lifecycle
-with DriverContext() as driver:
-    driver.get(url)
-    # Perform scraping operations
-
-# Simple driver getter
-with get_driver() as driver:
-    driver.get(url)
-
-# Configurazione pagina
-st.set_page_config(
-    page_title="WhoScored Events Explorer",
-    layout="wide",
-    page_icon="⚽"
-)
-from scraping_countermeasures.rate_limiter import RateLimiter
-from scraping_countermeasures.delays import add_random_delay
-from scraping_countermeasures.user_agent_rotation import get_random_user_agent
-
-# Rate limiting
-limiter = RateLimiter(max_requests=10, time_window=60)
-limiter.wait_if_needed()
-
-# Random delays
-add_random_delay(min_delay=1, max_delay=3)
 
 # User agent rotation
 headers = {'User-Agent': get_random_user_agent()}
