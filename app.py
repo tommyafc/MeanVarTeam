@@ -1,5 +1,33 @@
 import streamlit as st
-import pandas as pd
+import os
+import sys
+
+# Debug per capire dove siamo
+st.write("**Debug percorso:**")
+st.write("Cartella corrente:", os.getcwd())
+st.write("File nell'attuale cartella:", os.listdir("."))
+st.write("PYTHONPATH / sys.path:", sys.path)
+
+# Prova import con try/except molto esplicito
+try:
+    from events_loader import load_whoscored_events_data
+    st.success("Import riuscito! La funzione è disponibile.", icon="✅")
+except ModuleNotFoundError as e:
+    st.error(f"Errore import: {e}", icon="❌")
+    st.warning("""
+    Possibili cause:
+    1. Il file 'events_loader.py' non esiste nella root del repo
+    2. Nome file sbagliato (es. EventsLoader.py invece di events_loader.py)
+    3. File non pushato / commit non arrivato su GitHub
+    4. Cache vecchia → fai reboot app
+    """)
+    st.info("Lista file root repo secondo il container:")
+    st.code(os.listdir("."))
+    st.stop()  # ferma l'esecuzione qui per vedere solo il debug
+
+# Se arrivi qui → import ok
+st.title("WhoScored Events Viewer (soccerdata)")
+# ... resto del tuo codice ...import pandas as pd
 from events_loader import load_whoscored_events_data   # o dal nome che hai scelto
 
 st.set_page_config(page_title="WhoScored Events (soccerdata)", layout="wide")
