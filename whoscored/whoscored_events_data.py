@@ -1,129 +1,42 @@
-import pandas as pd
-import json
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from bs4 import BeautifulSoup
-from utils.driver import get_driver
+import streamlit as st
+import soccerdata as sd
+import re
 
-
-def load_whoscored_events_data(match_centre_url):
+@st.cache_data(ttl=3600, show_spinner="Caricamento eventi da WhoScored via soccerdata...")
+def load_whoscored_events_data(match_url: str):
     """
-    Load match centre data from WhoScored using Selenium.
-    Waits for script tag to load and extracts matchCentreData JSON.
-
-    Parameters:
-    match_centre_url (str): The URL of the WhoScored match centre page.
-
-    Returns:
-    pd.DataFrame: A DataFrame containing the matchCentreData, or None if error occurs.
+    Estrae match_id dall'URL e scarica gli eventi con soccerdata.
+    Restituisce DataFrame o None in caso di errore.
     """
-
     try:
-        with get_driver() as driver:
-            driver.get(match_centre_url)
-
-            # Wait for page to load completely
-            WebDriverWait(driver, 15).until(
-                EC.presence_of_element_located((By.TAG_NAME, "body"))
-            )
-
-            # Get page source and parse with BeautifulSoup
-            page_source = driver.page_source
-            soup = BeautifulSoup(page_source, "html.parser")
-
-            # Locate the script containing matchCentreData JSON
-            script_tag = soup.select_one('script:-soup-contains("matchCentreData")')
-
-            if not script_tag:
-                print("No script tag with matchCentreData found")
-                return None
-
-            # Extract JSON safely
-            try:
-                _, _, json_text = script_tag.text.partition("matchCentreData: ")
-                match_json = json.loads(json_text.split(",\n")[0])
-                print("Successfully parsed matchCentreData")
-
-                # Extract player ID-name dictionary
-                player_id_name_dict = match_json.get("playerIdNameDictionary", {})
-
-                if not player_id_name_dict:
-                    print("Warning: No player ID-name dictionary found")
-                else:
-                    print(f"Found {len(player_id_name_dict)} players in dictionary")
-
-                # Extract only events if needed
-                events_dict = match_json.get("events", {})
-
-                if not events_dict:
-                    print("No events data found in matchCentreData")
-                    return None
-
-                # Convert to DataFrame
-                df = pd.json_normalize(events_dict)
-
-                # Map player IDs to names if playerId column exists
-                if "playerId" in df.columns:
-                    # Convert playerId: float -> int -> str, handling NaN values
-                    df["playerName"] = df["playerId"].apply(
-                        lambda x: (
-                            player_id_name_dict.get(str(int(x)))
-                            if pd.notna(x)
-                            else None
-                        )
-                    )
-                    print(
-                        f"Added playerName column - {df['playerName'].notna().sum()} names mapped"
-                    )
-                else:
-                    print("Warning: No 'playerId' column found in events data")
-
-                # Also map relatedPlayerId if it exists
-                if "relatedPlayerId" in df.columns:
-                    df["relatedPlayerName"] = df["relatedPlayerId"].apply(
-                        lambda x: (
-                            player_id_name_dict.get(str(int(x)))
-                            if pd.notna(x)
-                            else None
-                        )
-                    )
-                    print(
-                        f"Added relatedPlayerName column - {df['relatedPlayerName'].notna().sum()} names mapped"
-                    )
-
-                return df
-
-            except Exception as e:
-                print(f"Error parsing match data: {e}")
-                return None
-
+        # Estrai match_id dall'URL (es. /Matches/1901138/...)
+        match = re.search(r'/Matches/(\d+)', match_url)
+        if not match:
+            st.error("Impossibile estrarre match_id dall'URL. Deve contenere '/Matches/NUMERO/'")
+            return None
+        
+        match_id = int(match.group(1))
+        
+        # Inizializza WhoScored (league/season opzionali, ma aiutano per caching)
+        # Puoi lasciare leagues/seasons vuoti se vuoi solo un match
+        ws = sd.WhoScored(
+            leagues=None,          # o es. "ENG-Premier League" se conosci la lega
+            seasons=None,          # o "2526" per 2025/26
+            no_cache=False,        # usa cache se possibile
+            proxy=None,            # aggiungi proxy/Tor se bloccato
+            headless=True
+        )
+        
+        # Scarica eventi (default: pd.DataFrame)
+        events_df = ws.read_events(match_id=match_id)
+        
+        if events_df is None or events_df.empty:
+            st.warning(f"Nessun evento trovato per match_id {match_id}")
+            return None
+        
+        return events_df
+    
     except Exception as e:
-        print(f"Error loading WhoScored match centre data: {str(e)}")
+        st.error(f"Errore durante il caricamento con soccerdata:\n{str(e)}")
+        st.info("Possibili cause: match_id non valido, partita senza eventi, limite rate WhoScored, bisogno di proxy.")
         return None
-
-
-def main():
-    """
-    Main function to demonstrate the WhoScored match centre data scraping.
-    """
-    # Example WhoScored match centre URL
-    match_url = "https://1xbet.whoscored.com/matches/1946104/live/england-league-cup-2025-2026-tottenham-doncaster"
-
-    # Scrape match centre data
-    match_df = load_whoscored_events_data(match_url)
-
-    if match_df is not None:
-        print(f"\nDataFrame Shape: {match_df.shape}")
-        print(f"Columns: {list(match_df.columns)}")
-        print("\nFirst few rows of the data:")
-        print(match_df.head())
-    else:
-        print("Failed to load match centre data")
-
-    return match_df
-
-
-# Execute the main function
-if __name__ == "__main__":
-    scraped_match_data = main()
