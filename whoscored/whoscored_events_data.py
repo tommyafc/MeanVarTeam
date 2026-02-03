@@ -32,6 +32,29 @@ def load_whoscored_events_data(match_centre_url):
             page_source = driver.page_source
             soup = BeautifulSoup(page_source, "html.parser")
 
+            # ... dopo soup = BeautifulSoup(...)
+
+            script_tag = soup.select_one('script:-soup-contains("matchCentreData")')
+            
+            if not script_tag:
+                print("DEBUG: Nessun script con matchCentreData trovato")
+                print("Titolo pagina:", soup.title.string if soup.title else "No title")
+                print("Prime 500 char body:", soup.body.text[:500] if soup.body else "No body")
+                return None
+            
+            # Estrazione testo
+            text = script_tag.text
+            print("DEBUG: Lunghezza testo script:", len(text))
+            print("DEBUG: Prime 200 char dopo matchCentreData:", text.partition("matchCentreData: ")[2][:200])
+            
+            # Poi prova parsing
+            try:
+                # Il tuo codice di split / json.loads ...
+            except Exception as e:
+                print("DEBUG: Errore parsing JSON:", str(e))
+                print("Testo grezzo estratto:", text[:1000])  # per vedere se è JSON rotto
+                return None
+
             # Locate the script containing matchCentreData JSON
             script_tag = soup.select_one('script:-soup-contains("matchCentreData")')
 
