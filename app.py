@@ -3,7 +3,6 @@ import pandas as pd
 from whoscored.whoscored_events_data import load_whoscored_events_data   # il tuo scraper
 
 # User agent rotation
-headers = {'User-Agent': get_random_user_agent()}
 
 st.title("WhoScored Match Events Viewer ⚽📊")
 
