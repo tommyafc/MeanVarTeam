@@ -39,6 +39,42 @@ def load_whoscored_events_data(match_centre_url):
                 print("No script tag with matchCentreData found")
                 return None
 
+            # Dentro try dopo aver trovato script_tag
+
+text = script_tag.string.strip() if script_tag.string else ""
+
+# Trova il blocco matchCentreData con regex più tollerante
+import re
+
+match = re.search(r'matchCentreData\s*:\s*({[\s\S]*?})(?:,\s*(?:matchCentreStats|formation|[\w]+)|\s*$)', text, re.DOTALL)
+if not match:
+    print("DEBUG: Regex non trova matchCentreData")
+    print("Script text length:", len(text))
+    print("Prime 400 char:", text[:400])
+    return None
+
+json_str = match.group(1).strip()
+
+# Pulizia comune
+json_str = json_str.rstrip(' ,}') + '}'  # rimuove virgole/parentesi extra
+
+try:
+    match_json = json.loads(json_str)
+    print("DEBUG: JSON keys trovati:", list(match_json.keys()))
+except json.JSONDecodeError as e:
+    print("DEBUG: JSON error:", str(e))
+    print("JSON fragment:", json_str[:600] + "...")
+    return None
+
+# Poi continua con playerIdNameDictionary e events
+events = match_json.get("events", [])
+if not events:
+    print("DEBUG: events vuoto o assente")
+    return None
+
+df = pd.json_normalize(events)
+# ... resto del mapping player names ...
+
             # Extract JSON safely
             try:
                 _, _, json_text = script_tag.text.partition("matchCentreData: ")
