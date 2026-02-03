@@ -106,8 +106,27 @@ class DriverContext:
             self.driver.quit()  # Close browser and clean up resources
 
 
-def get_driver(track_network=False):
-    return DriverContext(track_network=track_network)
+def get_driver():
+    options = webdriver.ChromeOptions()
+    options.add_argument("--headless=new")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--window-size=1920,1080")
+    options.add_argument("--disable-blink-features=AutomationControlled")
+    options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    options.add_experimental_option('useAutomationExtension', False)
+    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36")
+
+    # Se hai chromedriver path fisso:
+    service = Service("/usr/bin/chromedriver")  # adatta dal tuo setup Render
+
+    driver = webdriver.Chrome(service=service, options=options)
+    
+    # Nascondi webdriver property (utile anti-detection)
+    driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+    
+    return driver
 
 
 # Example usage
