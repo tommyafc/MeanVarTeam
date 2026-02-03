@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 from whoscored.whoscored_events_data import load_whoscored_events_data   # il tuo scraper
-pip install --upgrade webdriver-manager
 
 # Configurazione pagina
 st.set_page_config(
